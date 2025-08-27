@@ -23,13 +23,13 @@ jobs:
                 echo "${{secrets.SSH_PRIVATE_KEY}}" > ~/.ssh/meinPrivateKey
                 chmod 400 ~/.ssh/meinPrivateKey
 
-                for ip in ${{secrets.EC2_IPSS}}; do
+                for ip in ${{secrets.EC2_IPS}}; do
                     ssh-keyscan -H $ip >> ~/.ssh/known_hosts
                 done
 
             - name: deploy Website on all EC2 instances
               run: |
-                for ip in ${{secrets.EC2_IPSS}}; do
+                for ip in ${{secrets.EC2_IPS}}; do
 
                     curl -X POST -H 'Content-type: application/json' \
                     --data "{\"username\": \"EC2-$ip\", \"text\": \"Kopiere Website auf $ip!\"}" \
