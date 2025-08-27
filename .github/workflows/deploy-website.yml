@@ -1,0 +1,54 @@
+name: Deploy Website
+
+on: push
+
+jobs:
+    deploy:
+        runs-on: ubuntu-latest
+        steps:
+            - name: checkout
+              uses: actions/checkout@v5
+
+            - name: Post a message in a channel
+              uses: slackapi/slack-github-action@v2.1.1
+              with:
+                webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+                webhook-type: incoming-webhook
+                payload: |
+                    text: "🚀 Pipeline wurde soeben von ${{github.actor}} gestartet. Pipeline: ${{github.workflow}}"
+
+            - name: ssh setup
+              run: | 
+                mkdir -p ~/.ssh
+                echo "${{secrets.SSH_PRIVATE_KEY}}" > ~/.ssh/meinPrivateKey
+                chmod 400 ~/.ssh/meinPrivateKey
+
+                for ip in ${{secrets.EC2_IPSS}}; do
+                    ssh-keyscan -H $ip >> ~/.ssh/known_hosts
+                done
+
+            - name: deploy Website on all EC2 instances
+              run: |
+                for ip in ${{secrets.EC2_IPSS}}; do
+
+                    curl -X POST -H 'Content-type: application/json' \
+                    --data "{\"username\": \"EC2-$ip\", \"text\": \"Kopiere Website auf $ip!\"}" \
+                    ${{ secrets.SLACK_WEBHOOK_URL }}
+
+
+                    scp -i ~/.ssh/meinPrivateKey website/index.html ubuntu@$ip:/home/ubuntu/index.html
+                    ssh -i ~/.ssh/meinPrivateKey ubuntu@$ip "sudo cp /home/ubuntu/index.html /var/www/html/index.html"
+
+                    curl -X POST -H 'Content-type: application/json' \
+                    --data "{\"username\": \"EC2-$ip\", \"text\": \"✅ Website auf $ip erfolgreich Veröffentlicht!\"}" \
+                    ${{ secrets.SLACK_WEBHOOK_URL }}
+
+                done
+                
+            - name: Post a message in a channel
+              uses: slackapi/slack-github-action@v2.1.1
+              with:
+                webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+                webhook-type: incoming-webhook
+                payload: |
+                    text: "✅ Pipeline: ${{github.workflow}} erfolgreich abgeschlossen."
