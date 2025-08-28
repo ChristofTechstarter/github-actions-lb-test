@@ -19,5 +19,5 @@ jobs:
 
             - name: index.html für nginx bereitstellen
               run: |
-                scp -i ~/.ssh/meinPrivateKey frontend/index.html ubuntu@${{secrets.EC2_DEV_IP}}:/home/ubuntu/index.html
+                scp -i ~/.ssh/meinPrivateKey website/index.html ubuntu@${{secrets.EC2_DEV_IP}}:/home/ubuntu/index.html
                 ssh -i ~/.ssh/meinPrivateKey ubuntu@${{secrets.EC2_DEV_IP}} "sudo cp /home/ubuntu/index.html /var/www/html/index.html"    
