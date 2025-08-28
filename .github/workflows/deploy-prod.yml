@@ -1,9 +1,12 @@
-name: Deploy Website
+name: Deploy Website on all Production EC2 instances
 
-on: push
+on: 
+  push:
+    tags:
+      - 'v*'
 
 jobs:
-    deploy:
+    deploy-prod:
         runs-on: ubuntu-latest
         steps:
             - name: checkout
